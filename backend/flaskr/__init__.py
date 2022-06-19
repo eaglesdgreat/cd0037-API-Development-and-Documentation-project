@@ -47,10 +47,7 @@ def create_app(test_config=None):
     def get_categories():
         try:
             selection = Category.query.order_by(Category.id).all()
-            # categories = [category.format() for category in selection]
             
-            # if categories is None:
-            #     abort(404)
             categories = {}
             for cat in  [category.format() for category in selection]:
                 id = cat['id']
@@ -129,6 +126,7 @@ def create_app(test_config=None):
                 }
             )
         except:
+            print(sys.exc_info())
             abort(422)
 
     """
@@ -189,22 +187,27 @@ def create_app(test_config=None):
             body = request.get_json()
             searchTerm = body.get('searchTerm', None)
             selection = Question.query.filter(Question.question.ilike(f"%{searchTerm}%")).order_by(Question.id).all()
-            questions = [question.format() for question in selection]            
+            questions = [question.format() for question in selection]       
             
             if len(questions) == 0:
                 abort(404)
             
-            category = Category.query.filter(Category.id == questions[0]['id']).one_or_none()
+            category_type = ""
+            category = Category.query.filter(Category.id == questions[0]['category']).one_or_none()
+            
+            if category is not None:
+                category_type = category.format()['type']
             
             return jsonify(
                 {
                     "success": True,
                     "questions": questions,
                     'totalQuestions': len(selection),
-                    'currentCategory': category.format()['type']
+                    'currentCategory': category_type
                 }
             )
         except:
+            print(sys.exc_info())
             abort(422)
 
     """
@@ -323,6 +326,13 @@ def create_app(test_config=None):
         return (
             jsonify({"success": False, "error": 405, "message": "method not allowed"}),
             405,
+        )
+    
+    @app.errorhandler(500)
+    def server_error(error):
+        return (
+            jsonify({"success": False, "error": 500, "message": "server error"}),
+            500,
         )
 
     return app

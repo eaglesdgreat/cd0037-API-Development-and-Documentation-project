@@ -5,8 +5,14 @@ from flask_sqlalchemy import SQLAlchemy
 
 from flaskr import create_app
 from models import setup_db, Question, Category
+from dotenv import load_dotenv
 
+load_dotenv()
 
+POSTGRES_HOST = os.environ.get('TEST_POSTGRES_HOST')
+POSTGRES_USER = os.environ.get('TEST_POSTGRES_USER')
+POSTGRES_PASS = os.environ.get('TEST_POSTGRES_PASS')
+POSTGRES_DB = os.environ.get('TEST_POSTGRES_DB')
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
@@ -14,8 +20,8 @@ class TriviaTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "trivia_test"
-        self.database_path = "postgresql://{}:{}@{}/{}".format('eagles', '', '', self.database_name)
+        self.database_name = POSTGRES_DB
+        self.database_path = "postgresql://{}:{}@{}/{}".format(POSTGRES_USER, POSTGRES_PASS, POSTGRES_HOST, self.database_name)
         setup_db(self.app, self.database_path)
         
         self.new_question = {
@@ -81,14 +87,14 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["message"], "method not allowed")
         
     def test_delete_question(self):
-        res = self.client().delete("/questions/7")
+        res = self.client().delete("/questions/19")
         data = json.loads(res.data)
 
-        question = Question.query.filter(Question.id == 7).one_or_none()
+        question = Question.query.filter(Question.id == 19).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertEqual(data["deleted"], 7)
+        self.assertEqual(data["deleted"], 19)
         self.assertEqual(question, None)
 
     def test_404_delete_question_does_not_exist(self):
